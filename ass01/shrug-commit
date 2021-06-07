@@ -1,0 +1,128 @@
+#!/bin/dash
+#implement at 12:22, 8 July
+#done at 13:04
+
+#check argument is 2
+#create a repository named .i.'commit'
+#copy all the files from index to the repository
+#remove all the files in index
+
+#-a option done at 11:30, 11 July
+#checking .shrug
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-commit: error: no .shrug directory containing shrug repository exists"
+    exit 0
+fi
+
+#checking argument number
+if [ $# -lt 2 -o $# -gt 3 ]
+then
+    echo "usage: shrug-commit [-a] -m commit-message"
+    exit 0
+elif [ $# -eq 2 -a $1 != "-m" ]
+then
+    echo "usage: shrug-commit [-a] -m commit-message"
+    exit 0
+elif [ $# -eq 3 ]
+then 
+    if [ $1 != "-a" -o $2 != "-m" ]
+    then 
+        echo "usage: shrug-commit [-a] -m commit-message"
+        exit 0
+    fi
+fi
+
+index=".shrug/sub-directory"
+#can't commit without added
+if [ ! -e ".shrug/sub-directory.0" ]
+then 
+    echo "nothing to commit"
+    exit 0
+fi
+
+#-a option is specified
+#add files into index
+if [ $# -eq 3 ]
+then
+    i=0
+    while test -e "$index.$i"
+    do
+        i=$((i + 1))
+    done   
+
+    if [ $i -ge 1 ]
+    then
+        cp -r "$index.$((i - 1))" "$index.$i"
+    else
+        mkdir "$index.$i"
+    fi
+
+    for file in *
+    do
+        if [ $file != "shrug-*" ]
+        then
+            if test -e "$file"
+            then 
+                cp -r "$file" "$index.$i/$file"
+            else
+                echo "shrug-add: error: can not open '$file'"
+                exit 0
+            fi
+        fi
+    done
+fi
+
+j=0
+while test -e "$index.$j"
+do
+    j=$((j + 1))
+done
+
+#-a option is specified
+#added files from index into repo
+if [ $# -eq 3 ]
+then
+    
+    i=0
+    while test -e .shrug/$i.*
+    do
+        i=$((i + 1))
+    done
+    mkdir ".shrug/$i.$3"
+
+    for file in "$index.$((j - 1))"
+    do
+        cp -r "$file" ".shrug/$i.$3"
+    done
+
+    echo "Committed as commit $i"
+    exit 0
+fi
+
+#if added file same as previous
+#print nothing commit
+i=0
+while test -e .shrug/$i.*
+do
+    i=$((i + 1))
+done
+
+if [ "$i" -ne 0 ]
+then
+    DIFF=`diff -r .shrug/$((i - 1)).*/sub-directory.* $index.$((j - 1))`
+    if [ "$DIFF" = "" ]
+    then
+        echo "nothing to commit"
+        exit 0
+    fi
+fi
+
+mkdir ".shrug/$i.$2"
+
+for file in "$index.$((j - 1))"
+do
+    cp -r "$file" ".shrug/$i.$2"
+done
+
+echo "Committed as commit $i"

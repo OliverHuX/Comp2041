@@ -1,0 +1,118 @@
+#!/bin/dash
+
+#checking is there already exists .shrug
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-status: error: no .shrug directory containing shrug repository exists"
+    exit 0
+fi
+
+#check is there any commit
+repo=`ls .shrug|egrep "^[0-9]+"|sort|tail -n 1`
+
+if [ "$repo" = "" ]
+then
+    echo "shrug-status: error: your repository does not have any commits yet"
+    exit 0
+fi
+
+
+index=`ls .shrug|egrep "sub-directory.[0-9]+"|sort|tail -n 1`
+#loop every file in current directory but .shrug status.txt
+for file in *
+do
+    if [ "$file" = ".shrug" -o "$file" = "status.txt" -o "$file" = "*" ]
+    then
+        continue
+    fi
+
+    result_index=`find ".shrug/$index" -name "$file"`
+    result_repo=`find ".shrug/$repo" -name "$file"`
+
+    #if $file not in repo and index then untracked
+    if [ ! "$result_index" -a ! "$result_repo" ]
+    then
+        echo "$file - untracked" >> status.txt
+    #if $file only in working directory and index then $file - added to index    
+    elif [ ! "$result_repo" -a "$result_index" ]
+    then
+        DIFF_index=`diff -r "$file" .shrug/"$index"`
+        if [ "$DIFF_index" = "" ]
+        then
+            echo "$file - added to index" >> status.txt
+        else
+            echo "$file - added to index, file changed" >> status.txt
+        fi
+    elif [ "$result_repo" -a ! "$result_index" ]
+    then
+        echo "$file - untracked" >> status.txt
+    else
+        DIFF_index=`diff -r "$file" .shrug/"$index"`
+        DIFF_repo=`diff -r "$file" .shrug/"$repo"/sub-directory.*`
+        DIFF_index_repo=`diff -r .shrug/"$index"/"$file" .shrug/"$repo"/sub-directory.*/"$file"`
+        #if same as repo then same as repo
+        if [ "$DIFF_index" = "" -a "$DIFF_repo" = "" ]
+        then
+            echo "$file - same as repo" >> status.txt
+        #if not same as repo but index then $file - file changed, changes staged for commit    
+        elif [ "$DIFF_index" = "" -a "$DIFF_repo" != "" ]
+        then
+            echo "$file - file changed, changes staged for commit" >> status.txt
+        #if not same as repo and index then $file - file changed, different changes staged for commit    
+        elif [ "$DIFF_index" != "" -a "$DIFF_repo" != "" -a "$DIFF_index_repo" != "" ]
+        then
+            echo "$file - file changed, different changes staged for commit" >> status.txt
+        #if $file is same in repo and index but working directory then $file - file changed, changes not staged for commit
+        elif [ "$DIFF_index" != "" -a "$DIFF_repo" != "" -a "$DIFF_index_repo" = "" ]
+        then
+            echo "$file - file changed, changes not staged for commit" >> status.txt
+        fi
+    fi 
+done
+
+for filename in .shrug/"$repo"/sub-directory.*/*
+do
+    file=`echo "$filename"|cut -d '/' -f 4`
+    if [ "$file" = "*" ]
+    then
+        continue
+    fi
+    if test -e "$file"
+    then
+        continue
+    fi
+    result_index=`find ".shrug/$index" -name "$file"`
+    #if file in repo and index but working directory then file - file deleted
+    if [ "$result_index" ]
+    then
+        echo "$file - file deleted" >> status.txt
+    #if file only in repo then file - deleted
+    else
+        echo "$file - deleted" >> status.txt
+    fi
+done
+
+for filename in .shrug/"$index"/*
+do
+    file=`echo "$filename"|cut -d '/' -f 3`
+    if [ "$file" = "*" ]
+    then
+        continue
+    fi
+    if test -e "$file"
+    then
+        continue
+    fi
+    result_repo=`find ".shrug/$repo" -name "$file"`
+    if [ ! "$result_repo" ]
+    then
+        echo "$file - added to index, file deleted" >> status.txt
+    fi
+done
+
+if [ -e status.txt ]
+then
+    sort status.txt
+    rm status.txt
+fi
+

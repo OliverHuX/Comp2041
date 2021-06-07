@@ -1,0 +1,18 @@
+#!/bin/dash
+#implement at 11:28, 8 july
+#done at 11:30, 8 july
+
+#checking .shrug
+#exist print error
+if test -e ".shrug"
+then
+    echo "shrug-init: error: .shrug already exists"
+    exit 0
+else
+    mkdir ".shrug"
+    echo "Initialized empty shrug repository in .shrug"
+fi
+
+#initialise branch 
+echo "master" > .shrug/branch_list
+echo "master" > .shrug/current_branch

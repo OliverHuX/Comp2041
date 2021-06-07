@@ -1,0 +1,54 @@
+#!/usr/bin/perl -w
+
+# Makefile generated at Mon 27 Jul 17:24:51 AEST 2020
+print "# Makefile generated at ";
+print "date";
+print "\n";
+
+#CC = gcc
+#CFLAGS = -Wall -g
+print "CC = gcc\n";
+print "CFLAGS = -Wall -o3\n";
+print "\n";
+
+@cFile = glob("*.c");
+
+foreach $file(@cFile) {
+    open F, "<", $file or die "Can not open $file: $!";
+    $file =~ s/\.c//g;
+    foreach $line(<F>) {
+        if ($line =~ /^\s*(int|void)\s*main\s*\(/) {
+            $mainFile = $file;
+        }
+    }
+
+    close F;
+    push @allFile, $file
+}
+
+#easymain:   easymain.o graphics.o world.o
+print "$mainFile: ";
+foreach $file(@allFile) {
+    print "$file.o ";
+}
+print "\n";
+
+#    $(CC) $(CFLAGS) -o $@ a.o aaa.o b.o bb.o c.o main.o
+print  ' $(CC) $(CFLAGS) -o $@ ';
+foreach $file(@allFile) {
+    print "$file.o ";
+}
+print "\n";
+
+print "\n";
+foreach $file(@allFile) {
+    print "$file.o: ";
+    open F, "<", "$file.c" or die "Can not open $file: $!";
+    foreach $line(<F>) {
+        if($line =~ /#include "(.*)"/) {
+            print "$1 ";
+        }
+    }
+    print "$file.c\n";
+    close F;
+}

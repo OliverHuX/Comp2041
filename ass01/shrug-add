@@ -1,0 +1,45 @@
+#!/bin/dash
+#implement at 11:32, 8 july
+#done at 12:00, 8 july
+
+#checking if current directory exists .shrug
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-add: error: no .shrug directory containing shrug repository exists"
+elif [ $# -lt 1 ]
+then
+    echo "usage: shrug-add <filenames>"
+else
+    index=".shrug/sub-directory"
+    
+    i=0
+    while test -e "$index.$i"
+    do
+        i=$((i + 1))
+    done
+
+    #already have index
+    if [ $i -ge 1 ]
+    then
+        cp -r "$index.$((i - 1))" "$index.$i"
+    else
+    #there is no index
+        mkdir "$index.$i"
+    fi
+
+    #added file into index
+    for file in $@
+    do
+        if test -e "$file"
+        then 
+            cp -r "$file" "$index.$i/$file"
+        elif test -e "$index.$i/$file"
+        then
+            rm  "$index.$i/$file"
+        else
+            echo "shrug-add: error: can not open '$file'"
+            exit 0
+        fi
+    done
+fi
+

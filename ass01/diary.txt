@@ -1,0 +1,18 @@
+  Date       Start    Stop      Activity            Comments
+08/07/20     11:28    11:30      coding      implemented shrug-init
+08/07/20     11:32    12:00      coding      implemented shrug-add
+08/07/20     12:22    13:04      coding      implemented shrug-commit
+09/07/20     11:12    11:20      coding      implemented shrug-log
+09/07/20     12:20    13:14      coding      implemented shrug-show and finished subset0
+09/07/20     15:00    19:15     debugging    found problem with cp command in shrug-commit/add
+10/07/20     11:00    15:00     debugging    found bug with error check in shrug-show
+
+11/07/20     10:30    12:15      coding      added -a option functionality to shrug-commit
+11/07/20     16:00    19:00     debugging    foung bug in -a option
+12/07/20     11:00    15:00      coding      implemented shrug-rm functionality
+12/07/20     19:00    21:00     debugging    found bug in --cached option and syntax error
+13/07/20     14:00    18:00      coding      implemented shrug-status functionality
+13/07/20     20:00    22:00     debugging    fixed bug found in error check that file only in the index
+14/07/20     12:00    13:00      coding      added initialised branch master to shrug-init
+14/07/20     14:00    16:00      coding      implemented shrug-branch functionality
+15/07/20     12:00      -       debugging    fix bugs in -d option of shrug-branch

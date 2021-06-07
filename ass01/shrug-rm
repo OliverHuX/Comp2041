@@ -1,0 +1,177 @@
+#!/bin/dash
+
+#shrug-rm delete file from working directory and index but give an 
+#error message "shrug-rm: error: 'a' in repository is different to working file"
+#when the repository is different to the working directory
+
+#shrug-rm --cached remove file only from the index
+
+#shrug-rm --force remove file from index and working directory without checking difference
+
+#shrug-em --force --cached remove file from index
+
+#checking is there already exists .shrug
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-rm: error: no .shrug directory containing shrug repository exists"
+    exit 0
+fi
+
+#check is there any commit
+repo=`ls .shrug|egrep "^[0-9]+"|sort|tail -n 1`
+
+if [ "$repo" = "" ]
+then
+    echo "shrug-rm: error: your repository does not have any commits yet"
+    exit 0
+fi
+
+#error checking
+if [ $# -eq 0 ]
+then
+    echo "usage: shrug-rm [--force] [--cached] <filenames>"
+    exit 0
+elif [ $# -eq 1 ]
+then
+    if [ $1 = "--force" -o $1 = "--cached" ]
+    then
+        echo "usage: shrug-rm [--force] [--cached] <filenames>"
+        exit 0
+    fi
+elif [ $# -eq 2 -a $1 = "--force" -a $2 = "--cached" ]
+then
+    echo "usage: shrug-rm [--force] [--cached] <filenames>"
+    exit 0
+elif [ $# -eq 2 -a $1 = "--cached" -a $2 = "--force" ]
+then
+    echo "usage: shrug-rm [--force] [--cached] <filenames>"
+    exit 0
+fi
+
+#this is index path
+path=`ls .shrug|egrep "sub-directory.[0-9]+"|sort|tail -n 1`
+
+#first circumstance shrug-rm filenames
+if [ $1 != "--force" -a $1 != "--cached" ]
+then
+    for file in $@
+    do
+        result=`find ".shrug/$path" -name "$file"`
+
+        if [ ! "$result" ]
+        then
+            echo "shrug-rm: error: '$file' is not in the shrug repository"
+            exit 0
+        fi
+        dirname=`ls .shrug|egrep "^[0-9]+"|sort|tail -n 1`
+        dir=`ls .shrug/"$dirname"`
+        DIFF=`diff -r $file .shrug/"$path"/"$file"`
+        
+        if [ "$DIFF" = "" ]
+        then
+            result=`find  .shrug/"$dirname"/"$dir" -name "$file"`
+            if [ "$result" ]
+            then
+                DIF=`diff -r .shrug/"$dirname"/"$dir" .shrug/"$path"/"$file"`
+            fi
+            if [ ! "$result" -o "$DIF" != "" ]
+            then
+                echo "shrug-rm: error: '$file' has changes staged in the index"
+                exit 0
+            fi
+        fi
+
+        DIFF=`diff -r "$file" .shrug/"$path"/"$file"`
+        if [ "$DIFF" != "" ]
+        then
+            path=`ls .shrug|egrep "^[0-9]+"|sort|tail -n 1`
+            dir=`ls .shrug|egrep "sub-directory.[0-9]+"|sort|tail -n 1`
+            DIFF=`diff -r .shrug/"$dir"/"$file" .shrug/"$path"/sub-directory.*/"$file"`
+            if [ "$DIFF" != "" ]
+            then
+                echo "shrug-rm: error: '$file' in index is different to both working file and repository"
+                exit 0
+            fi
+            echo "shrug-rm: error: '$file' in repository is different to working file"
+            exit 0
+        fi
+
+        rm "$file"
+        rm ".shrug/$path/$file"
+    done
+#second circumstance shrug-rm --cached filenames
+elif [ $1 = "--cached" ]
+then
+    for file in $@
+    do
+        if [ $file = "--cached" ]
+        then
+            continue
+        fi
+
+        result=`find ".shrug/$path" -name "$file"`
+
+        if [ ! "$result" ]
+        then
+            echo "shrug-rm: error: '$file' is not in the shrug repository"
+            exit 0
+        fi
+
+        DIFF=`diff -r "$file" .shrug/"$path"/"$file"`
+        if [ "$DIFF" != "" ]
+        then
+            dir=`ls .shrug|egrep "^[0-9]+"|sort|tail -n 1`
+            DIFF=`diff -r .shrug/"$path"/"$file" .shrug/"$dir"/sub-directory.*/"$file"`
+            if [ "$DIFF" != "" ]
+            then
+                echo "shrug-rm: error: '$file' in index is different to both working file and repository"
+                exit 0
+            fi
+        fi
+        rm ".shrug/$path/$file"
+    done
+#third circumstance shrug-rm --force filenames
+elif [ $1 = "--force" -a $2 != "--cached" ]
+then
+    for file in $@
+    do
+        if [ $file = "--force" ]
+        then
+            continue
+        fi
+
+        result=`find ".shrug/$path" -name "$file"`
+
+        if [ ! "$result" ]
+        then
+            echo "shrug-rm: error: '$file' is not in the shrug repository"
+            exit 0
+        fi
+
+        rm "$file"
+        rm ".shrug/$path/$file"
+
+    done
+#fourth circumstance shrug-rm --force --cached filenames
+elif [ $1 = "--force" -a $2 = "--cached" ]
+then
+    for file in $@
+    do
+        if [ $file = "--force" -o $file = "--cached" ]
+        then
+            continue
+        fi
+
+        result=`find ".shrug/$path" -name "$file"`
+
+        if [ ! "$result" ]
+        then
+            echo "shrug-rm: error: '$file' is not in the shrug repository"
+            exit 0
+        fi
+
+        rm ".shrug/$path/$file"
+
+    done
+fi
+

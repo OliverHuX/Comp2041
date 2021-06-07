@@ -1,0 +1,14 @@
+  Date       Start    Stop      Activity            Comments
+01/08/20     11:28    11:30      coding      implemented subset 0
+02/08/20     11:32    12:00      coding      implemented subset 1
+03/08/20     12:22    13:04      coding      implemented subset 2
+04/08/20     11:12    11:20      coding      implemented subset 3
+04/08/20     12:20    13:14      coding      implemented subset 3
+04/08/20     15:00    19:15     debugging    fixed the syntax error in subset 3
+
+05/08/20     10:30    12:15      coding      added new feature in subset 2
+06/08/20     16:00    19:00     debugging    foung small bug in subset 2
+07/08/20     11:00    15:00      coding      implemented subset 4
+07/08/20     19:00    21:00     debugging    fixed the common # problem in subset 4
+08/08/20     14:00    18:00      coding      implemented more feature in subset 4
+09/08/20     13:00    18:00     debugging    fixed the syntax error in subset 4

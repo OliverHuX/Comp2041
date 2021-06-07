@@ -1,0 +1,130 @@
+#!/bin/dash
+
+#no shrug checking
+repo=`ls .shrug|egrep "^[0-9]+"|sort|tail -n 1`
+master_repo="$repo"
+branch_name="branch.$1"
+if [ ! -e .shrug ]
+then
+    echo "shrug-checkout: error: no .shrug directory containing shrug repository exists"
+    exit 0
+#no repo checking
+elif [ "$repo" = "" ]
+then
+    echo "shrug-checkout: error: your repository does not have any commits yet"
+    exit 0
+#argumrnt number checking
+elif [ $# -ne 1 ]
+then
+    echo "usage: shrug-checkout <branch>"
+    exit 0
+#unknow branch checking
+elif [ ! -e .shrug/"$branch_name" ]
+then
+    if [ "$1" != "master" ]
+    then
+        echo "shrug-checkout: error: unknown branch '$branch_name'"
+        exit 0
+    fi
+fi
+
+cb=`cat .shrug/current_branch`
+if [ "$cb" = "$branch_name" ]
+then
+    echo "Already in $branch_name"
+    exit 0
+fi
+
+repo_list=`ls .shrug|egrep "^[0-9]+"`
+index_list=`ls .shrug|egrep "sub-directory.[0-9]+"`
+
+if [ ! -e ".shrug/tmp" ]
+then
+    mkdir .shrug/tmp
+fi
+
+if [ "$1" = "master" ]
+then
+    branch_name="branch.$cb"
+fi
+
+for dir in $repo_list
+do
+    mv .shrug/"$dir" .shrug/tmp
+done
+for dir in $index_list
+do
+    mv .shrug/"$dir" .shrug/tmp
+done
+
+branch_repo_list=`ls .shrug/"$branch_name"|egrep "^[0-9]+"`
+branch_index_list=`ls .shrug/"$branch_name"|egrep "sub-directory.[0-9]+"`
+
+for dir in $branch_repo_list
+do
+    mv .shrug/"$branch_name"/"$dir" .shrug
+done
+for dir in $branch_index_list
+do
+    mv .shrug/"$branch_name"/"$dir" .shrug
+done
+
+tmp_repo_list=`ls .shrug/tmp|egrep "^[0-9]+"`
+tmp_index_list=`ls .shrug/tmp|egrep "sub-directory.[0-9]+"`
+
+for dir in $tmp_repo_list
+do
+    mv .shrug/tmp/"$dir" .shrug/"$branch_name"
+done
+for dir in $tmp_index_list
+do
+    mv .shrug/tmp/"$dir" .shrug/"$branch_name"
+done
+repo=`ls .shrug|egrep "^[0-9]+"|sort|tail -n 1`
+for filename in .shrug/"$repo"/sub-directory.*/*
+do
+    #echo "$filename"
+    file=`echo "$filename"|cut -d '/' -f 4`
+    if [ ! -d "$filename" -a -e "$file" ]
+    then
+        index=`ls .shrug/"$branch_name"/"$master_repo"|egrep "sub-directory.[0-9]+"`
+        if [ -e .shrug/"$branch_name"/"$master_repo"/"$index"/"$file" ]
+        then
+            DIFF=`diff -r "$filename" ".shrug/"$branch_name"/"$master_repo"/"$index"/"$file""`
+        fi
+        if [ "$DIFF" != "" ]
+        then
+            cp $filename .
+        fi
+    fi
+done
+repo=`ls .shrug|egrep "^[0-9]+"|sort|tail -n 1`
+branch_repo=`ls .shrug/"$branch_name"|egrep "^[0-9]+"|sort|tail -n 1`
+index=`ls .shrug/"$repo"|egrep "sub-directory.[0-9]+"`
+
+for filename in .shrug/"$repo"/sub-directory.*/*
+do
+    file=`echo "$filename"|cut -d '/' -f 4`
+    if [ ! -e "$file" ]
+    then
+        cp $filename .
+    fi
+done
+
+for filename in .shrug/"$branch_name"/"$branch_repo"/sub-directory.*/*
+do
+    file=`echo "$filename"|cut -d '/' -f 5`
+    if [ ! -d $filename -a ! -e .shrug/"$repo"/"$index"/"$file" ]
+    then
+        rm $file
+    fi
+done
+
+if [ "$1" = "master" ]
+then
+    echo "Switched to branch '$1'"
+    echo "$1" > .shrug/current_branch
+else
+    echo "Switched to branch '$1'"
+    echo "$1" > .shrug/current_branch
+fi

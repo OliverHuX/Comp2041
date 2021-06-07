@@ -1,0 +1,97 @@
+#!/bin/dash
+
+#shrug-branch: error: your repository does not have any commits yet
+#without shrug-commit
+
+#no .shrug
+#shrug-branch: error: no .shrug directory containing shrug repository exists
+
+#worry arguments
+#usage: shrug-branch [-d] <branch>
+#find the current repo
+repo=`ls .shrug|egrep "^[0-9]+"|sort|tail -n 1`
+
+#no .shrug prints error message
+if [ ! -e .shrug ]
+then
+    echo "shrug-branch: error: no .shrug directory containing shrug repository exists"
+    exit 0
+elif [ "$repo" = "" ]
+then
+#no commit yet
+    echo "shrug-branch: error: your repository does not have any commits yet"
+    exit 0
+elif [ $# -eq 0 ]
+then
+#show the branchs
+    sort .shrug/branch_list
+    exit 0
+elif [ $# -gt 2 ]
+then
+#argument checking
+    echo "usage: shrug-branch [-d] <branch>"
+    exit 0
+elif [ $# -eq 2 ]
+then
+#-d option checking
+    match=`echo "$2"|egrep '^-'`
+    if [ $1 != "-d" ]
+    then
+        echo "usage: shrug-branch [-d] <branch>"
+        exit 0
+    elif [ "$match" != "" ]
+    then
+        echo "usage: shrug-branch [-d] <branch>"
+        exit 0
+    fi
+else
+    match=`echo "$1"|egrep '^-'`
+    if [ "$match" != "" ]
+    then
+        echo "usage: shrug-branch [-d] <branch>"
+        exit 0
+    fi
+fi
+#branch_list
+#current_branch
+
+#create branch
+if [ $# -eq 1 ]
+then
+    match=`egrep "^$1$" .shrug/branch_list`
+    if [ "$match" != "" ]
+    then
+        echo "shrug-branch: error: branch '$1' already exists"
+        exit 0
+    fi
+    echo "$1" >> .shrug/branch_list
+    mkdir .shrug/"branch.$1"
+    repo_list=`ls .shrug|egrep "^[0-9]+"`
+    index_list=`ls .shrug|egrep "sub-directory.[0-9]+"`
+    #copy all the files in current directory to branch
+    for dir in $repo_list
+    do
+        cp -r .shrug/"$dir" .shrug/"branch.$1"
+    done
+    for dir in $index_list
+    do
+        cp -r .shrug/"$dir" .shrug/"branch.$1"
+    done
+#-d option specified, delete branch
+else
+    if [ "$2" = "master" ]
+    then
+        echo "shrug-branch: error: can not delete branch 'master'"
+        exit 0
+    elif [ ! -e .shrug/"branch.$2" ]
+    then
+        echo "shrug-branch: error: branch '$2' does not exist"
+        exit 0
+    else
+        rm -rd .shrug/"branch.$2"
+        echo "Deleted branch '$2'"
+        sed /^"$2"$/d .shrug/branch_list > tmp_list
+        cat tmp_list > .shrug/branch_list
+        rm tmp_list
+    fi
+fi

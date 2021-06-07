@@ -1,0 +1,31 @@
+#!/bin/dash
+
+#checking .shrug
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-log: error: no .shrug directory containing shrug repository exists"
+    exit 0
+fi
+#find the repo
+repo=`ls .shrug|egrep "^[0-9]+"|sort|tail -n 1`
+#if can't find repo then print error
+if [ "$repo" = "" ]
+then
+    echo "shrug-log: error: your repository does not have any commits yet"
+    exit 0
+fi
+
+for file in echo .shrug/*
+do
+    num=`echo "$file"|sed 's/.shrug\///'|egrep '^[0-9]+'|cut -d '.' -f 1`
+    message=`echo "$file"|sed 's/.shrug\///'|egrep '^[0-9]+'|cut -d '.' -f 2`
+    if [ $num ]
+    then
+        echo "$num $message" >> info.txt
+    fi
+done
+
+#print info.txt in reverse order
+tac info.txt
+
+rm info.txt

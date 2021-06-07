@@ -1,0 +1,44 @@
+#!/bin/dash
+
+#checking is there already exists .shrug
+if [ ! -e ".shrug" ]
+then
+    echo "shrug-show: error: no .shrug directory containing shrug repository exists"
+    exit 0
+fi
+
+#check argument, it should be one
+if [ $# -ne 1 ]
+then
+    echo "usage: shrug-show <commit>:<filename>"
+    exit 0
+fi
+#split commit:filename
+commit=`echo "$1"|cut -d ':' -f 1`
+filename=`echo "$1"|cut -d ':' -f 2`
+
+#if there is no commit, it should find the path of filename in index
+if [ ! "$commit" ]
+then 
+    path=`ls .shrug|egrep "sub-directory.[0-9]+"|sort|tail -n 1`
+else
+    path=`ls .shrug|egrep "^$commit"`
+    if [ ! "$path" ]
+    then 
+        echo "shrug-show: error: unknown commit '$commit'"
+        exit 0
+    fi
+fi
+
+#check if exist file
+result=`find ".shrug/$path" -name "$filename"`
+
+if [ "$result" ]
+then
+    cat "$result"
+elif [ ! "$commit" ]
+then
+    echo "shrug-show: error: '$filename' not found in index"
+else
+    echo "shrug-show: error: '$filename' not found in commit "$commit""
+fi
